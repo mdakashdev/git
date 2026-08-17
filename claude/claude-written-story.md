@@ -32,10 +32,36 @@
 ---
 
 2. Reference
+
+I created a `docs` folder for references, and inside it, I created a `uikit-reference` folder. Based on my needs, I created two files: `components.md` and `status.md`.
+
+In the Reference section, I organize the instructions by segment so they are easier to find. For UI Kit compatibility, I created a dedicated segment and defined its **Source of Truth**.
+
+Since the main goal of this project is to make components compatible, I listed all the components that need to be made compatible in the `components.md` file and added their corresponding references there, inside the `uikit-reference` folder.
+
+
+
 3. Status Tracking
+
+Before starting the work, always check the status and update it in `docs/uikit-reference/status.md`. After completing the work, update the status file again.
+
+This note can be added under the **Common** section.
+
+We need task tracking to know what stage the work is at and how to track its progress.
+
+I’ll create a central `status.md` file inside the `uikit-reference` folder, where I’ll maintain the status of each component, such as:
+
+* Button — `done`
+* Input — `running`
+* Modal — `pending`
+
+So, I’ll create a separate **Status** section that defines how the status should be maintained, how the file should be updated, and what needs to be done before starting the next task.
 
 
 4. Important Notes
+
+When writing notes and rules, I’ll break the project/package down into smaller parts. For example, the parts could be **Common, UI Kit, Bricks, and Package**. Once the project is divided into separate parts, it becomes easier to think about each part individually and define the appropriate rules or notes.
+
 
 ```text
 When writing the `Important Notes` section, it becomes easier to define notes and rules by thinking in terms of different segments or parts.
@@ -65,6 +91,11 @@ Project section নিয়ে কাজ করার পর আমি `Important 
 
 
 
+Notes এবং rules লেখার সময় project/package-টাকে ছোট ছোট অংশে ভাগ করে চিন্তা করব।
+
+যেমন, part-গুলো হতে পারে **Common, UI Kit, Bricks, Package**। এভাবে project-কে আলাদা আলাদা part-এ ভাগ করলে প্রতিটি part নিয়ে আলাদাভাবে চিন্তা করে প্রয়োজনীয় **rules বা notes** তৈরি করা সহজ হবে।
+
+
 ```text
 `Important Notes` section লেখার সময় বিভিন্ন **segment বা part** অনুযায়ী চিন্তা করলে notes বা rules তৈরি করা সহজ হয়।
 যেমন: **Common, UI Kit, Bricks, Package**। এগুলো আমার project-এ পাওয়া কিছু part, তবে তোমার project অনুযায়ী আরও অনেক part পাওয়া যেতে পারে।
@@ -81,7 +112,34 @@ Project section নিয়ে কাজ করার পর আমি `Important 
 
 ---
 
+> Status tracking 
 
+কাজ শুরু করার আগে সবসময় status check করতে হবে এবং `docs/uikit-reference/status.md`-এ status update করতে হবে। কাজ শেষ হওয়ার পরও status file-টি update করতে হবে।
+
+এই note-টি **Common** section-এর অধীনে রাখলেই হবে।
+
+
+আমাদের কাজের tracking প্রয়োজন, যাতে কাজটি কোন পর্যায়ে আছে এবং কীভাবে এর progress track করা হবে তা বোঝা যায়।
+
+এর জন্য `uikit-reference` folder-এর মধ্যে একটি central `status.md` file তৈরি করব, যেখানে প্রতিটি component-এর status maintain করব। যেমন:
+
+* Button — `done`
+* Input — `running`
+* Modal — `pending`
+
+তাই **Status** নিয়ে আলাদা একটি section তৈরি করব। সেখানে status কীভাবে maintain করতে হবে, file কীভাবে update করতে হবে এবং পরবর্তী কাজ শুরু করার আগে কী কী করতে হবে—এসব define করা থাকবে।
+
+---
+
+> Reference
+
+Reference-এর জন্য `docs` folder তৈরি করেছি, এবং এর ভেতরে `uikit-reference` নামে একটি folder নিয়েছি। আমার প্রয়োজন অনুযায়ী সেখানে দুটি file তৈরি করেছি: `components.md` এবং `status.md`।
+
+**Reference** section-এ segment অনুযায়ী instruction রাখি, যাতে প্রয়োজনের সময় সহজে খুঁজে পাওয়া যায়। তাই **UI Kit compatibility**-এর জন্য একটি আলাদা segment রেখেছি এবং সেখানে এর **Source of Truth** কী, তা উল্লেখ করেছি।
+
+যেহেতু আমার মূল উদ্দেশ্য হলো component-গুলোকে compatible করা, তাই যেসব component compatible করতে হবে, সেগুলোর তালিকা `components.md` file-এ রেখেছি এবং সেখানেই তাদের corresponding reference দিয়েছি। এই file-টি `uikit-reference` folder-এর ভেতরে রাখা হয়েছে।
+
+---
 
 # Post
 
