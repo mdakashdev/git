@@ -1,14 +1,6 @@
-# Summary
-- `package overview` - A one-sentence description of the entire package/project that provides a clear overall understanding of its purpose and scope.
-  (done)
-- `package goal` - To state the purpose clearly and specifically - (done)
-
-
-
-- উদ্দেশ্যটা **point-by-point** বা **সংক্ষেপে নির্দিষ্ট করে বলা**।
-
-
 # Package:  @rddm/bricks-uikit
+
+## Overview
 
 `@rddm/bricks-uikit` হলো **Stencil.js** দিয়ে তৈরি একটি ওয়েব কম্পোনেন্ট লাইব্রেরি।
 এই প্যাকেজের মূল উদ্দেশ্য হলো **Bricks component system-এর সঙ্গে UI Kit-এর কম্পোনেন্টগুলোকে সামঞ্জস্যপূর্ণ করা**, একই সঙ্গে Bricks-এর কম্পোনেন্টগুলোকে স্বাধীনভাবে ব্যবহার করার সুবিধা বজায় রাখা।
@@ -26,6 +18,8 @@ UI Kit-compatible components — UI Kit-এর এমন components যেগু
 
 ```
 
+## Package Goals
+
 This project has two primary goals:
 1. Make UI Kit components compatible with Bricks
 2. Keep Bricks components independently usable
@@ -41,6 +35,22 @@ This project has two primary goals:
 - `uikit-app`: ekhane uikit package er sathe develop kora package compare kora hoyeche
 - `uikit-app-test`: only uikit package er component gulo ekhane visible kore dekha hoyeche
 
+## Commands
+
+- `pnpm play:bricks`: eita diye playground er nuxt-app ke run kore,
+- `pnpm play:uikit`: eita diye playground er uikit-app ke run kore",
+- `pnpm build:bricks-uikit`: eita diye @rddm/bricks-uikit package ke build kore,
+- `pnpm test`: eita diye test run kore,
+
+## Important Notes
+
+-
+
+
+
+
+
+
 
 ## Important Notes
 
@@ -48,6 +58,7 @@ This project has two primary goals:
 - nije theke commit or push korbe na
 - must follow existing package architecture
 -
+
 
 `@rddm/uikit` package 20-21 ta component ke `@nexus/bricks` er component er sathe compatible korbo, so amake `@rddm/uikit` component gulo reference hisabe dite cai
 seta kivabe dibo, akta folder kore sekhane component name onujai rakhbo, naki onno vabe aar clude.md te kivabe referecne dibo.
