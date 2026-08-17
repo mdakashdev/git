@@ -10,6 +10,10 @@ git remote set-url origin https://github.com/username/new-repo.git
 git remote set-url origin git@github.com:username/new-repo.git
 ```
 
+```bash
+git remote set-url origin git@github-local:mdakashdev/git.git
+```
+
 বর্তমান remote URL দেখতে:
 
 ```bash
