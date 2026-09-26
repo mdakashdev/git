@@ -200,8 +200,6 @@ Excellent 👍 **Git 2.43.0 already installed.** ✅
 
 ---
 
-
-
 # এখন আমাদের server environment-এর basic foundation complete:
 
 ```text
@@ -273,7 +271,7 @@ Perfect 👍 এটা একদম normal।
 └── authorized_keys
 ```
 
-`authorized_keys` হলো **EC2-তে তোমার SSH login-এর জন্য**। GitHub-এর জন্য আলাদা key তৈরি করব।
+> `authorized_keys` হলো **EC2-তে তোমার SSH login-এর জন্য**। GitHub-এর জন্য আলাদা key তৈরি করব।
 
 ## Step 7.2 — EC2 → GitHub-এর জন্য SSH key তৈরি
 
@@ -509,10 +507,6 @@ git remote -v
 চালিয়ে output পাঠাও।
 
 **এখনো EC2-তে `git clone` চালাবে না।** প্রথমে repository URL confirm করি।
-
-
-
-
 
 # Manual Deployment
 
@@ -886,6 +880,7 @@ composer install --no-dev --optimize-autoloader
 
 শেষ হলে outputটা পাঠাও।
 
+---
 
 Perfect ✅ `vendor/` successfully created. That means:
 
@@ -965,6 +960,8 @@ INFO  Application key set successfully.
 
 Great ✅ `APP_KEY` set হয়ে গেছে।
 
+---
+
 ### Step 4 — Database setup
 
 এখন Laravel-এর জন্য **MySQL database** লাগবে।
@@ -982,29 +979,6 @@ Great ✅ `APP_KEY` set হয়ে গেছে।
 আমাদের **প্রথম manual deployment শেখার জন্য**, আমি আগে **EC2-এর ভিতর MySQL** দিয়ে শুরু করার পরামর্শ দেব। পরে চাইলে একই project-কে **RDS-এ migrate** করব।
 
 যদি এটা ঠিক থাকে, next step হবে **EC2-তে MySQL install করা**।
-
-
-
-
-
-# Step 4 — Database setup
-
-এখন Laravel-এর জন্য **MySQL database** লাগবে।
-
-**English:** Before installing/configuring MySQL, we need to decide where the database will live:
-
-* **MySQL on the same EC2** → easier for learning and our first deployment.
-* **AWS RDS MySQL** → more production-like and recommended for real-world architecture.
-
-**বাংলা:** এখন Laravel-এর database লাগবে। দুইটা option আছে:
-
-* **একই EC2 server-এ MySQL** → শেখার জন্য সহজ।
-* **AWS RDS MySQL** → production-এর জন্য বেশি standard architecture।
-
-আমাদের **প্রথম manual deployment শেখার জন্য**, আমি আগে **EC2-এর ভিতর MySQL** দিয়ে শুরু করার পরামর্শ দেব। পরে চাইলে একই project-কে **RDS-এ migrate** করব।
-
-যদি এটা ঠিক থাকে, next step হবে **EC2-তে MySQL install করা**।
-
 
 ঠিক আছে 👍
 
