@@ -1399,3 +1399,585 @@ php artisan about
 এটা Laravel application-এর configuration/environment সম্পর্কে summary দেখাবে।
 
 **এখন শুধু এই command চালান এবং output দিন।**
+
+
+Perfect ✅ Laravel application ঠিকভাবে detect হচ্ছে এবং MySQL connection-ও configured আছে।
+
+তবে `about` output-এ **৩টা production-related বিষয়** পরে ঠিক করতে হবে:
+
+* `Environment: local` → production-এ `production`
+* `Debug Mode: ENABLED` → production-এ `false`
+* `public/storage: NOT LINKED` → পরে `storage:link` করব
+
+এখনই সব একসাথে change করব না। আমরা **এক step করে** যাব।
+
+## Step 4.11 — `.env`-এ production mode সেট করা
+
+**English:** First, change Laravel from local environment to production.
+
+**বাংলা:** আগে Laravel-এর environment `local` থেকে `production` করব।
+
+Run:
+
+```bash id="xq0m2m"
+sed -i 's/^APP_ENV=.*/APP_ENV=production/' .env
+```
+
+তারপর verify:
+
+```bash id="k3n8qr"
+grep '^APP_ENV=' .env
+```
+
+Expected:
+
+```text id="5w7y9a"
+APP_ENV=production
+```
+
+এখন শুধু এই দুইটা command চালিয়ে output দিন।
+
+
+Perfect ✅
+
+`APP_ENV=production` ঠিকভাবে সেট হয়েছে।
+
+### Step 4.12 — Debug Mode বন্ধ করা
+
+**English:** In production, Laravel debug mode should be disabled so sensitive error details are not exposed to visitors.
+
+**বাংলা:** Production server-এ `DEBUG` বন্ধ রাখতে হয়, যাতে কোনো error হলে database/config/path-এর sensitive information visitor-এর কাছে দেখানো না হয়।
+
+Run:
+
+```bash id="7f6x0u"
+sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+```
+
+তারপর verify:
+
+```bash id="1k0w8x"
+grep '^APP_DEBUG=' .env
+```
+
+Expected:
+
+```text
+APP_DEBUG=false
+```
+
+এটা run করে output দিন।
+
+
+
+Perfect ✅ `APP_DEBUG=false` সেট হয়েছে।
+
+### Step 4.13 — Laravel config cache
+
+এখন Laravel-কে `.env` configuration cache করতে হবে।
+
+**English:** This makes Laravel load configuration efficiently in production.
+
+**বাংলা:** Production-এ Laravel configuration দ্রুত load করার জন্য config cache করা হয়।
+
+Run:
+
+```bash
+php artisan config:cache
+```
+
+Expected:
+
+```text
+INFO  Configuration cached successfully.
+```
+
+এটা চালিয়ে output দিন।
+
+
+Excellent ✅ Laravel configuration successfully cached.
+
+এখন পর্যন্ত backend-এর গুরুত্বপূর্ণ অংশগুলো ready:
+
+```text
+PHP 8.3        ✅
+Composer       ✅
+Laravel        ✅
+.env           ✅
+APP_KEY        ✅
+MySQL          ✅
+Database       ✅
+Migrations     ✅
+Production     ✅
+Config cache   ✅
+```
+
+### Step 4.14 — Storage link তৈরি
+
+Laravel-এর `storage/app/public` থেকে uploaded/public files browser দিয়ে access করার জন্য symbolic link দরকার।
+
+**English:** Create Laravel's public storage symlink.
+
+**বাংলা:** Laravel-এর public storage link তৈরি করব।
+
+Run:
+
+```bash id="s8f3k2"
+php artisan storage:link
+```
+
+Expected:
+
+```text
+INFO  The [public/storage] directory has been linked to [storage/app/public].
+```
+
+তারপর আমাকে output দিন।
+
+
+
+
+Perfect ✅ Storage link successfully তৈরি হয়েছে।
+
+এখন backend-এর Laravel configuration প্রায় ready।
+
+# Step 4.15 — PHP-FPM install
+
+এখন আমরা **Nginx + PHP-FPM** setup করব।
+
+**English:** PHP-FPM is the service that allows Nginx to execute your Laravel PHP application.
+
+**বাংলা:** Nginx সরাসরি PHP execute করে না। **PHP-FPM** Nginx-এর request নিয়ে Laravel/PHP code execute করবে।
+
+প্রথমে PHP-FPM install করুন:
+
+```bash id="f5x2k8"
+sudo apt install php8.3-fpm -y
+```
+
+তারপর check করুন:
+
+```bash id="r2n7vc"
+sudo systemctl status php8.3-fpm
+```
+
+Expected:
+
+```text
+Active: active (running)
+```
+
+এখন শুধু এই দুইটা command চালিয়ে output দিন।
+
+
+Perfect ✅ PHP-FPM একদম ঠিকভাবে চলছে।
+
+আপনার output-এর গুরুত্বপূর্ণ অংশ:
+
+```text
+Active: active (running)
+Status: "Processes active: 0, idle: 2"
+```
+
+মানে PHP-FPM ready এবং Nginx-এর request নেওয়ার জন্য প্রস্তুত।
+
+### Next Step — Nginx install
+
+এখন চালান:
+
+```bash
+sudo apt install nginx -y
+```
+
+তারপর:
+
+```bash
+sudo systemctl status nginx
+```
+
+Expected:
+
+```text
+Active: active (running)
+```
+
+শুধু এই দুইটা command চালিয়ে **Nginx-এর output** দিন।
+
+
+
+Perfect ✅ Nginx successfully running.
+
+এখন আমাদের backend-এর জন্য **Nginx configuration** করতে হবে।
+
+### Step 4.17 — Laravel-এর জন্য Nginx config file তৈরি
+
+**English:** We will create a dedicated Nginx server block for your Laravel API. It will point Nginx to:
+
+```text
+/var/www/frontend-project/emp-management-api/public
+```
+
+**বাংলা:** Laravel-এর পুরো project folder নয়, Nginx-এর `root` হবে Laravel-এর **`public` folder**। এটা security-এর জন্য খুব important।
+
+প্রথমে config file তৈরি করুন:
+
+```bash id="n3c4m7"
+sudo nano /etc/nginx/sites-available/emp-management-api
+```
+
+তারপর নিচের configuration **পুরোটা paste করুন**:
+
+```nginx id="8p7q2r"
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name _;
+
+    root /var/www/frontend-project/emp-management-api/public;
+
+    index index.php index.html;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+### Nano-তে save করার নিয়ম
+
+1. `Ctrl + O` → Save
+2. `Enter`
+3. `Ctrl + X` → Exit
+
+⚠️ **এখন config enable করবেন না।** আগে file save করে আমাকে বলুন **done**।
+
+
+Great ✅ Nginx config file তৈরি হয়েছে।
+
+### Step 4.18 — Config syntax test
+
+Enable করার আগে আমরা configuration-এ কোনো syntax error আছে কিনা check করব।
+
+Run:
+
+```bash id="n6r8w2"
+sudo nginx -t
+```
+
+**Expected:**
+
+```text
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+**বাংলা:** `nginx -t` শুধু configuration validate করবে। এখনো live configuration change করবে না।
+
+Command চালিয়ে **পুরো output দিন**।
+
+
+
+Perfect ✅ Nginx configuration syntax ঠিক আছে।
+
+### Step 4.19 — Laravel Nginx site enable
+
+এখন আমাদের তৈরি করা config-টা Nginx-এর active sites-এ enable করব।
+
+Run:
+
+```bash id="z9q3kw"
+sudo ln -s /etc/nginx/sites-available/emp-management-api /etc/nginx/sites-enabled/emp-management-api
+```
+
+তারপর default Nginx site disable করি, যাতে default welcome page না আসে:
+
+```bash id="k2m6vp"
+sudo rm /etc/nginx/sites-enabled/default
+```
+
+তারপর আবার config test:
+
+```bash id="p7v4cx"
+sudo nginx -t
+```
+
+সবশেষে Nginx reload:
+
+```bash id="m3j8qa"
+sudo systemctl reload nginx
+```
+
+**বাংলা:** এখানে আমরা শুধু Laravel site-টাকে active করছি এবং Nginx-এর default site সরাচ্ছি।
+
+এই ৪টা command চালিয়ে **শেষের output / কোনো error থাকলে সেটা দিন**।
+
+
+
+Perfect ✅ Nginx এখন Laravel API-এর জন্য configured এবং reload হয়েছে।
+
+### Step 4.20 — Laravel API test
+
+এখন browser-এর আগে **EC2 server-এর ভিতর থেকেই** Laravel API response test করব।
+
+Run:
+
+```bash id="w4r6t2"
+curl -I http://127.0.0.1
+```
+
+Expected-এর মধ্যে এরকম কিছু থাকবে:
+
+```text
+HTTP/1.1 200 OK
+```
+
+অথবা Laravel-এর route অনুযায়ী অন্য valid HTTP status আসতে পারে।
+
+**English:** This confirms Nginx is receiving requests and serving your Laravel application.
+
+**বাংলা:** এতে আমরা বুঝব Nginx → PHP-FPM → Laravel chain কাজ করছে কিনা।
+
+শুধু এই command চালিয়ে output দিন।
+
+
+ভালো—এখানে একটা **useful signal** পেয়েছি। Nginx কাজ করছে, কিন্তু Laravel request process করতে গিয়ে `500` দিচ্ছে।
+
+```text
+Nginx → ✅
+PHP/Laravel → ❌ 500
+```
+
+এখন আন্দাজ করে কোনো config change করব না। **প্রথমে actual Laravel error বের করব।**
+
+### Step 4.21 — Laravel log দেখুন
+
+আপনার Laravel project folder-এই থাকুন:
+
+```text
+/var/www/frontend-project/emp-management-api
+```
+
+Run:
+
+```bash
+tail -n 30 storage/logs/laravel.log
+```
+
+**English:** This will show the latest Laravel error and tell us exactly why the request returned `500`.
+
+**বাংলা:** এতে Laravel-এর সর্বশেষ error দেখা যাবে এবং `500` হওয়ার আসল কারণ জানা যাবে।
+
+⚠️ যদি `No such file or directory` বা অন্য কোনো error আসে, সেটাও পুরোটা পাঠাবেন।
+
+শুধু command চালিয়ে **output দিন**।
+
+
+ঠিক আছে। এখানে **নতুন কোনো Laravel log তৈরি হয়নি**। তাই `500`-এর কারণ Laravel log থেকে এখনো পাওয়া যাচ্ছে না।
+
+আমরা এবার Laravel-এর বাইরে থেকে **PHP-FPM/Nginx error log** দেখব।
+
+### Step 4.23 — Nginx error log দেখুন
+
+Run:
+
+```bash
+sudo tail -n 30 /var/log/nginx/error.log
+```
+
+**English:** This will show whether Nginx/PHP-FPM is reporting the actual cause of the `500`.
+
+**বাংলা:** এতে Nginx বা PHP-FPM-এর actual error দেখা যাবে, যেটা থেকে `500` কেন হচ্ছে সেটা বের করতে পারব।
+
+শুধু এই command চালিয়ে **পুরো output দিন**।
+
+
+Excellent, এবার আসল কারণ পাওয়া গেছে। ✅
+
+Error-এর মূল অংশ:
+
+```text
+Permission denied
+/var/www/frontend-project/emp-management-api/storage/logs/laravel.log
+```
+
+### সমস্যাটা কী?
+
+Nginx → PHP-FPM Laravel চালাচ্ছে **`www-data` user** হিসেবে।
+
+কিন্তু `storage/` এবং `storage/logs/` এখন আপনার `ubuntu` user-এর ownership-এ আছে। তাই Laravel log file-এ লিখতে পারছে না → ফলে `500 Internal Server Error`।
+
+Laravel-এর জন্য `storage` এবং `bootstrap/cache` writable করতে হবে।
+
+### Step 4.24 — Permission ঠিক করি
+
+এই command চালান:
+
+```bash id="9f2xka"
+sudo chown -R www-data:www-data storage bootstrap/cache
+```
+
+তারপর:
+
+```bash id="k8m4pz"
+sudo chmod -R 775 storage bootstrap/cache
+```
+
+**English:** This gives PHP-FPM permission to write Laravel logs, cache, sessions, compiled files, etc.
+
+**বাংলা:** এতে PHP-FPM Laravel-এর `storage` এবং `bootstrap/cache`-এ প্রয়োজনীয় file লিখতে পারবে।
+
+এখন **এই দুইটা command-ই চালান**। তারপর আমাকে বলুন `done`।
+
+
+Perfect ✅ Permission ঠিক করা হয়েছে।
+
+### Step 4.25 — আবার Laravel API test করি
+
+এখন একই request আবার চালান:
+
+```bash
+curl -I http://127.0.0.1
+```
+
+**Expected:** এবার `500` না হয়ে Laravel-এর কোনো response পাওয়া উচিত, যেমন:
+
+```text
+HTTP/1.1 200 OK
+```
+
+অথবা আপনার application's route অনুযায়ী `404`, `302` ইত্যাদি হতে পারে। **`500` না হওয়াটাই এখন মূল বিষয়।**
+
+**বাংলা:** এবার দেখব permission fix করার পর Laravel request successfully process করতে পারছে কিনা।
+
+Command চালিয়ে **পুরো output দিন**।
+
+
+
+Excellent! 🎉 **Laravel Backend is working on EC2 now.**
+
+আপনার সবচেয়ে important output:
+
+```text
+HTTP/1.1 200 OK
+```
+
+মানে পুরো chain কাজ করছে:
+
+```text
+Nginx
+  ↓
+PHP-FPM
+  ↓
+Laravel 13
+  ↓
+MySQL
+```
+
+✅ MySQL connected
+✅ Laravel migrations done
+✅ Production mode
+✅ Debug disabled
+✅ Storage link created
+✅ PHP-FPM running
+✅ Nginx running
+✅ Laravel response = `200 OK`
+
+### Next Step
+
+এখন আমরা **EC2 Public IP থেকে browser দিয়ে Laravel API access** করতে পারি।
+
+আপনার EC2 Public IP:
+
+```text
+56.10.120.85
+```
+
+Browser-এ খুলুন:
+
+```text
+http://56.10.120.85
+```
+
+তারপর কী দেখাচ্ছে আমাকে বলুন।
+
+
+
+
+Excellent! 🎉 **Laravel backend successfully deployed on EC2.**
+
+Browser থেকে Laravel Home Page পাওয়া মানে:
+
+```text
+Internet
+   ↓
+EC2 Public IP
+   ↓
+Security Group :80
+   ↓
+Nginx
+   ↓
+PHP-FPM
+   ↓
+Laravel
+   ↓
+MySQL
+```
+
+সবকিছু কাজ করছে। ✅
+
+### Backend Deployment Status
+
+| Component         | Status |
+| ----------------- | ------ |
+| EC2               | ✅      |
+| GitHub Clone      | ✅      |
+| PHP 8.3           | ✅      |
+| Composer          | ✅      |
+| Laravel           | ✅      |
+| MySQL             | ✅      |
+| Database          | ✅      |
+| Migrations        | ✅      |
+| PHP-FPM           | ✅      |
+| Nginx             | ✅      |
+| Production `.env` | ✅      |
+| Laravel Storage   | ✅      |
+| Public Access     | ✅      |
+
+**বাংলা:** আমাদের **Laravel backend deployment milestone complete**। 🚀
+
+এখন পরের অংশ হবে **Frontend deployment**:
+
+```text
+emp-management
+     ↓
+Node.js
+     ↓
+pnpm install
+     ↓
+pnpm build
+     ↓
+dist/
+     ↓
+Nginx
+     ↓
+Browser
+```
+
+এবং frontend থেকে Laravel API-এর connection configure করব।
+
+**পরের step থেকে আমরা frontend deployment শুরু করব।**
+
+
+
+
+# frontend deployment
