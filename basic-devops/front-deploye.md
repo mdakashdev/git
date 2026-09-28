@@ -1826,3 +1826,64 @@ git push -u origin deployment-setup
 
 Outputটা পাঠাও।
 
+
+
+EC2 terminal-এই করবে 👍
+
+তুমি এখন যেই terminal-এ আছো, সেটাই—যেখানে এমন দেখাচ্ছে:
+
+```text
+ubuntu@ip-172-31-5-244:/var/www/frontend-project$
+```
+
+সেখানে প্রথম command:
+
+```bash
+sudo chown -R www-data:www-data /var/www/frontend-project/emp-management-api/storage /var/www/frontend-project/emp-management-api/bootstrap/cache
+```
+
+তারপর:
+
+```bash
+sudo chmod -R 775 /var/www/frontend-project/emp-management-api/storage /var/www/frontend-project/emp-management-api/bootstrap/cache
+```
+
+এগুলো **GitHub বা local Mac-এ না**, **EC2 server-এর terminal-এ** করবে।
+
+শেষ হলে `done` বলো।
+
+
+Perfect ✅
+
+এখন deployment-এর মূল অংশগুলো কাজ করছে:
+
+* ✅ EC2 server
+* ✅ Laravel backend
+* ✅ MySQL
+* ✅ PHP-FPM
+* ✅ Nginx
+* ✅ Vue frontend
+* ✅ Frontend → `/api`
+* ✅ Production build
+* ✅ GitHub `deployment-setup` branch
+
+### Step 34 — Final browser test
+
+Browser-এ খুলে:
+
+```text
+http://56.10.120.85
+```
+
+তারপর application-এর **Login / Employee-related functionality** test করো।
+
+বিশেষ করে:
+
+1. Login কাজ করে কিনা
+2. Employee list load হয় কিনা
+3. Employee create করা যায় কিনা
+4. কোনো API error আসে কিনা
+
+কোনো error হলে **error message/screenshot** পাঠাও।
+সব ঠিক থাকলে শুধু **`done`** বলো।
+
