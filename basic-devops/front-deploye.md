@@ -1073,3 +1073,756 @@ if (errors) {
 
 
 
+Excellent! ✅ **Frontend build successful.**
+
+এই warning:
+
+```text
+Some chunks are larger than 500 kB
+```
+
+এটা **error না**। Build successfully complete হয়েছে।
+
+### Step 4 — `dist` verify করি
+
+EC2-তে frontend folder থেকেই চালাও:
+
+```bash
+ls -lah dist
+```
+
+Expected এরকম কিছু দেখতে পাবে:
+
+```text
+index.html
+assets/
+```
+
+এটা চালিয়ে output দাও।
+
+
+Perfect ✅ `dist` তৈরি হয়েছে। এখন আমরা Nginx দিয়ে এই frontend serve করব।
+
+### Step 5 — আগে বর্তমান Nginx config দেখি
+
+EC2-তে চালাও:
+
+```bash
+sudo cat /etc/nginx/sites-available/laravel
+```
+
+Outputটা আমাকে দাও।
+
+
+ঠিক আছে 👍 সমস্যা নেই। আমাদের Nginx config-এর filename `laravel` না।
+
+### Step 5 আবার — কোন config আছে সেটা দেখি
+
+এই command চালাও:
+
+```bash
+ls -lah /etc/nginx/sites-available/
+```
+
+Outputটা দাও।
+
+
+
+Perfect 👍 আমাদের config-এর নাম `emp-management-api`।
+
+### Step 6 — বর্তমান backend Nginx config দেখো
+
+চালাও:
+
+```bash
+sudo cat /etc/nginx/sites-available/emp-management-api
+```
+
+Outputটা দাও।
+
+
+Perfect. এখন বুঝতে পারছি বর্তমান setup কীভাবে কাজ করছে।
+
+বর্তমানে:
+
+* `/` → Laravel backend
+* `/api/hello` → Laravel API
+* Frontend `dist/` এখনো Nginx serve করছে না।
+
+আমরা এখন **একই domain/IP**-তে রাখব:
+
+```text
+http://56.10.120.85/       → Vue frontend
+http://56.10.120.85/api/*  → Laravel API
+```
+
+এতে frontend থেকে API call করার সময় আলাদা port/domain লাগবে না।
+
+### Step 7 — Config backup নাও
+
+আগে existing working config-এর backup করি:
+
+```bash
+sudo cp /etc/nginx/sites-available/emp-management-api \
+/etc/nginx/sites-available/emp-management-api.backup
+```
+
+তারপর শুধু আমাকে **`done`** বলো।
+
+
+Great 👍
+
+### Step 8 — Nginx config edit করো
+
+চালাও:
+
+```bash
+sudo nano /etc/nginx/sites-available/emp-management-api
+```
+
+পুরো existing content মুছে দিয়ে **এটা paste করো**:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name _;
+
+    # Vue frontend
+    root /var/www/frontend-project/emp-management/dist;
+    index index.html;
+
+    # Frontend
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Laravel API
+    location ^~ /api/ {
+        include fastcgi_params;
+
+        fastcgi_param SCRIPT_FILENAME /var/www/frontend-project/emp-management-api/public/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/frontend-project/emp-management-api/public;
+
+        fastcgi_param REQUEST_URI $request_uri;
+
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+
+    # Block hidden files
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+তারপর:
+
+1. `Ctrl + O`
+2. `Enter`
+3. `Ctrl + X`
+
+**এখন Nginx reload করবে না।** শুধু config save করে আমাকে **`done`** বলো।
+
+
+Great 👍
+
+### Step 9 — Nginx config test করি
+
+এখন চালাও:
+
+```bash id="1i7qrf"
+sudo nginx -t
+```
+
+Expected:
+
+```text
+syntax is ok
+test is successful
+```
+
+**শুধু outputটা আমাকে দাও।**
+
+Perfect ✅ Nginx configuration valid.
+
+### Step 10 — Nginx reload করো
+
+এখন চালাও:
+
+```bash
+sudo systemctl reload nginx
+```
+
+তারপর browser-এ যাও:
+
+**[http://56.10.120.85](http://56.10.120.85)**
+
+এখন Laravel page-এর বদলে তোমার **Vue frontend** দেখা উচিত।
+
+Frontend দেখা গেলে শুধু **`done`** বলো।
+
+http://56.10.120.85/api/hello
+
+
+
+
+কোনো output আসেনি—মানে `/api/hello` request-এর response আমরা পাইনি।
+
+আগে দেখি request-টা কী status দিচ্ছে।
+
+### Step 12
+
+চালাও:
+
+```bash
+curl -i http://56.10.120.85/api/hello
+```
+
+এবার যে পুরো output আসবে, সেটা আমাকে দাও।
+
+
+Perfect! ✅
+
+এখন আমাদের setup কাজ করছে:
+
+```text
+Browser
+   ↓
+Vue + Vite Frontend
+   ↓
+Nginx :80
+   ├── /        → Vue dist/
+   └── /api/*   → Laravel + PHP-FPM
+                     ↓
+                   MySQL
+```
+
+### Step 13 — এখন আসল বিষয়: Frontend API URL
+
+Frontend browser থেকে backend API call করছে কিনা সেটা verify করতে হবে।
+
+প্রথমে frontend-এর environment/config কোথায় API URL সেট করা আছে সেটা খুঁজব।
+
+চালাও:
+
+```bash
+cd /var/www/frontend-project/emp-management
+grep -R "VITE_API\|API_URL\|baseURL" -n src .env* 2>/dev/null
+```
+
+Outputটা আমাকে দাও।
+
+
+হ্যাঁ, এই API test **successful** ✅
+
+তুমি একই command আবার পাঠিয়েছো। এখন আমাদের পরের কাজ হলো frontend-এর **API URL কোথায় configured আছে** সেটা দেখা।
+
+### Step 13
+
+এই command-টা চালাও:
+
+```bash
+grep -R "VITE_API\|API_URL\|baseURL" -n src .env* 2>/dev/null
+```
+
+তার **outputটা পাঠাও**।
+
+
+
+Excellent 👍 এখন আসল issue পাওয়া গেছে।
+
+তোমার frontend এখন API call করছে:
+
+```text
+http://127.0.0.1:8000/api
+```
+
+এটা **EC2 production-এর জন্য ভুল**, কারণ browser-এর `127.0.0.1` মানে **যে computer/browser থেকে website খুলছো সেই computer**, EC2 না।
+
+আমরা যেহেতু frontend এবং backend একই domain/IP-তে রেখেছি, সবচেয়ে ভালো হবে:
+
+```text
+VITE_API_BASE_URL=/api
+```
+
+তাহলে:
+
+```text
+Frontend: http://56.10.120.85
+API:      http://56.10.120.85/api
+```
+
+### Step 14 — `.env` ঠিক করো
+
+EC2 frontend folder-এ চালাও:
+
+```bash id="p6x4bt"
+nano .env
+```
+
+এই:
+
+```env id="8z7d3q"
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
+```
+
+পরিবর্তন করে করো:
+
+```env id="3n0p8k"
+VITE_API_BASE_URL=/api
+```
+
+Save:
+
+**Ctrl + O → Enter → Ctrl + X**
+
+তারপর শুধু **`done`** বলো।
+
+
+Great 👍
+
+`.env` change হয়েছে। কিন্তু মনে রাখবে: **Vite build-এর সময় `.env` value bundle-এর মধ্যে চলে যায়**। তাই নতুন `.env` value নিতে আবার build করতে হবে।
+
+### Step 15 — আবার build করো
+
+```bash id="n6x4qk"
+cd /var/www/frontend-project/emp-management
+pnpm build
+```
+
+Expected:
+
+```text
+✓ built in ...s
+```
+
+এবং আগের মতো শুধু বড় chunk-এর warning থাকতে পারে—ওটা সমস্যা না।
+
+Build শেষ হলে **outputটা পাঠাও**।
+
+
+Excellent ✅ তাহলে frontend + backend একই server-এ successfully connected.
+
+এখন deployment-এর একটা গুরুত্বপূর্ণ cleanup বাকি: **EC2-তে আমরা কিছু code/config change করেছি, কিন্তু GitHub-এ এগুলো এখনো properly synced নাও থাকতে পারে।**
+
+### Step 17 — Git status দেখি
+
+EC2-তে frontend folder থেকে চালাও:
+
+```bash
+cd /var/www/frontend-project
+git status
+```
+
+Outputটা দাও।
+
+
+ঠিক আছে 👍 এখানে কয়েকটা change **আমাদের deployment-এর সময় হয়েছে**, কিন্তু সব GitHub-এ push করা উচিত না।
+
+বিশেষ করে:
+
+* `.env` ❌ GitHub-এ যাবে না
+* `storage/.gitignore`-এর changes ❌ এগুলো deployment-এর কারণে হয়েছে
+* `routes/api.php` → `/api/hello` আমরা EC2-তে manually দিয়েছিলাম
+* Frontend-এর `.vue`, `employee.ts` → build error fix করার জন্য করা actual code changes ✅
+* `pnpm-lock.yaml` → `npm-run-all2` যোগ করার কারণে change হয়েছে; এটা code dependency change হলে GitHub-এ থাকা উচিত
+
+এখন **কোনো commit করো না**।
+
+### Step 18 — `.env` tracked কিনা check করি
+
+চালাও:
+
+```bash id="r6d1m8"
+git ls-files emp-management/.env
+```
+
+**Outputটা দাও।**
+
+
+ভালো 👍 `.env`-এ এখন শুধু:
+
+```env
+VITE_API_BASE_URL=/api
+```
+
+কোনো secret নেই।
+
+তবে production practice হিসেবে `.env` **GitHub-এ track না করাই ভালো**। কিন্তু যেহেতু এটা তোমার learning deployment, আমরা এখন carefully Git history/`.gitignore` ঠিক করব।
+
+### Step 20 — `.gitignore` check করি
+
+চালাও:
+
+```bash id="e8x4tp"
+cat emp-management/.gitignore
+```
+
+Outputটা পাঠাও।
+
+
+
+ঠিক আছে 👍 `.gitignore`-এ `.env` নেই। তাই `.env` tracked হওয়াটা expected।
+
+Production practice অনুযায়ী আমরা `.env` ignore করব, কিন্তু **existing tracked `.env` Git index থেকে remove** করার আগে local/EC2 workflow ঠিকভাবে করতে হবে।
+
+তবে এখন যেহেতু আমাদের মূল লক্ষ্য deployment complete করা, আগে একটা জিনিস নিশ্চিত করি:
+
+### Step 21 — `.env` GitHub-এ কী ছিল সেটা দেখি
+
+চালাও:
+
+```bash id="z8j3qa"
+git show HEAD:emp-management/.env
+```
+
+Outputটা পাঠাও।
+
+এতে বোঝা যাবে **GitHub-এর বর্তমান `main` branch-এ `.env`-এর কী value আছে**।
+
+
+Exactly 👍 এখন পুরো বিষয়টা clear।
+
+GitHub-এর `main`-এ `.env` আছে:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
+```
+
+আর EC2-তে আমরা এটাকে করেছি:
+
+```env
+VITE_API_BASE_URL=/api
+```
+
+কিন্তু **এই change GitHub-এ push করা উচিত নয়**, কারণ `.env` environment-specific configuration।
+
+### Step 22 — `.gitignore`-এ `.env` যোগ করি
+
+চালাও:
+
+```bash id="f7k2md"
+echo ".env" >> emp-management/.gitignore
+```
+
+তারপর verify করো:
+
+```bash id="x0j8pa"
+tail -5 emp-management/.gitignore
+```
+
+শেষে `.env` দেখা উচিত।
+
+Outputটা পাঠাও।
+
+
+এখানে একটা ছোট typo হয়েছে। 😄
+
+তোমার output:
+
+```text
+.pnpm-store.env
+```
+
+মানে `.env` আলাদা line হিসেবে যোগ হয়নি; command-এর সময় newline issue হয়েছে।
+
+### Step 23 — ঠিক করে দাও
+
+চালাও:
+
+```bash
+printf '\n.env\n' >> emp-management/.gitignore
+```
+
+তারপর:
+
+```bash
+tail -5 emp-management/.gitignore
+```
+
+Expected শেষের দিকে:
+
+```text
+*.timestamp-*-*.mjs
+
+.pnpm-store.env
+.env
+```
+
+`done` বলার আগে শুধু outputটা পাঠাও।
+
+
+Perfect ✅ `.env` এখন ignore হবে।
+
+কিন্তু `.env` আগে থেকেই Git-এ tracked, তাই শুধু `.gitignore` করলেই যথেষ্ট নয়। Git index থেকেও remove করতে হবে, **ফাইলটি EC2-তে থাকবে**।
+
+### Step 24 — Git tracking থেকে `.env` remove করি
+
+চালাও:
+
+```bash id="m7k2qa"
+git rm --cached emp-management/.env
+```
+
+⚠️ এটা করলে **EC2-এর `.env` file delete হবে না**, শুধু Git tracking থেকে বের হবে।
+
+তারপর `git status` চালাবে।
+
+
+
+Perfect ✅ `git rm --cached` ঠিকভাবে কাজ করেছে। `.env` এখন **staged deletion**, কিন্তু EC2-এর actual `.env` file আছে।
+
+এখন আমরা **শুধু দরকারি frontend changes** GitHub-এ নেওয়ার জন্য প্রস্তুত করব।
+
+কিন্তু তার আগে unwanted changes (`storage/.gitignore`, `bootstrap/cache/.gitignore`) বাদ দিতে হবে।
+
+### Step 25 — Backend-এর generated `.gitignore` changes revert করো
+
+এই command চালাও:
+
+```bash id="9wq1ke"
+git restore emp-management-api/bootstrap/cache/.gitignore \
+emp-management-api/storage/app/.gitignore \
+emp-management-api/storage/app/private/.gitignore \
+emp-management-api/storage/app/public/.gitignore \
+emp-management-api/storage/framework/.gitignore \
+emp-management-api/storage/framework/cache/.gitignore \
+emp-management-api/storage/framework/cache/data/.gitignore \
+emp-management-api/storage/framework/sessions/.gitignore \
+emp-management-api/storage/framework/testing/.gitignore \
+emp-management-api/storage/framework/views/.gitignore \
+emp-management-api/storage/logs/.gitignore
+```
+
+তারপর:
+
+```bash id="y7g3vp"
+git status
+```
+
+Outputটা পাঠাও।
+
+
+
+হ্যাঁ 👍 **নতুন branch নেওয়াই ভালো**, বিশেষ করে তোমার current situation-এ।
+
+কারণ EC2-তে আমরা deployment শেখার সময় কিছু changes করেছি, আর তোমার local `main`-এর সাথে এগুলো সরাসরি mix করতে চাই না।
+
+আমি recommend করব:
+
+```text
+main
+ │
+ ├── local development → main
+ │
+ └── deployment-fix    ← EC2-এর এই changes
+```
+
+তাহলে:
+
+* তোমার local `main` clean থাকবে
+* GitHub `main`-এর সাথে local `main` ঠিক থাকবে
+* EC2-এর changes আলাদা branch-এ থাকবে
+* পরে চাইলে review করে `main`-এ merge করতে পারবে
+
+### এখন গুরুত্বপূর্ণ
+
+তোমার current Git state-এ `.env` deletion **staged** আছে। তাই branch create করার আগে সেটাও সমস্যা নয়—branch-এ staged state-সহ চলে যাবে।
+
+### Step 25 — নতুন branch তৈরি করো
+
+EC2 `/var/www/frontend-project` থেকে:
+
+```bash
+git switch -c deployment-setup
+```
+
+তারপর:
+
+```bash
+git branch
+```
+
+Expected:
+
+```text
+* deployment-setup
+  main
+```
+
+এটা চালিয়ে output দাও।
+
+
+
+ঠিক আছে 👍 Branch ঠিক আছে। এখন backend-এর generated `.gitignore` changesগুলো বাদ দিই।
+
+### Step 27 — এই command চালাও
+
+```bash
+git restore emp-management-api/bootstrap/cache/.gitignore \
+emp-management-api/storage/app/.gitignore \
+emp-management-api/storage/app/private/.gitignore \
+emp-management-api/storage/app/public/.gitignore \
+emp-management-api/storage/framework/.gitignore \
+emp-management-api/storage/framework/cache/.gitignore \
+emp-management-api/storage/framework/cache/data/.gitignore \
+emp-management-api/storage/framework/sessions/.gitignore \
+emp-management-api/storage/framework/testing/.gitignore \
+emp-management-api/storage/framework/views/.gitignore \
+emp-management-api/storage/logs/.gitignore
+```
+
+তারপর:
+
+```bash
+git status
+```
+
+Output পাঠাও।
+
+
+ঠিক আছে 👍 এটা **permission issue**। কারণ Laravel deployment-এর সময় `storage` এবং `bootstrap/cache` আমরা `www-data` ownership দিয়েছিলাম।
+
+এখন `git restore` user হিসেবে করতে পারছে না।
+
+### Step 28 — এই directories-এর ownership সাময়িকভাবে `ubuntu` করো
+
+চালাও:
+
+```bash
+sudo chown -R ubuntu:ubuntu emp-management-api/storage emp-management-api/bootstrap/cache
+```
+
+তারপর একই `git restore` command আবার চালাও:
+
+```bash
+git restore emp-management-api/bootstrap/cache/.gitignore \
+emp-management-api/storage/app/.gitignore \
+emp-management-api/storage/app/private/.gitignore \
+emp-management-api/storage/app/public/.gitignore \
+emp-management-api/storage/framework/.gitignore \
+emp-management-api/storage/framework/cache/.gitignore \
+emp-management-api/storage/framework/cache/data/.gitignore \
+emp-management-api/storage/framework/sessions/.gitignore \
+emp-management-api/storage/framework/testing/.gitignore \
+emp-management-api/storage/framework/views/.gitignore \
+emp-management-api/storage/logs/.gitignore
+```
+
+তারপর:
+
+```bash
+git status
+```
+
+**শুধু `git status` outputটা পাঠাও।**
+
+
+
+Perfect ✅ এখন status অনেক clean।
+
+এখন আমাদের **7টা change** আছে, যার মধ্যে কোনগুলো রাখব তা পরিষ্কার:
+
+**রাখব:**
+
+* `emp-management/.gitignore`
+* `emp-management/pnpm-lock.yaml`
+* `DepartmentChart.vue`
+* `EmployeeChart.vue`
+* `employee.ts`
+* `Create.vue`
+* `.env` deletion
+
+**`routes/api.php`** — এটা `/api/hello` test route, এটা এখন আর deployment code হিসেবে রাখা দরকার নেই। পরে local code থেকে proper API route থাকলে সেটাই deploy করব।
+
+### Step 29 — `routes/api.php` change বাদ দাও
+
+চালাও:
+
+```bash id="x8k2pp"
+git restore emp-management-api/routes/api.php
+```
+
+তারপর:
+
+```bash id="g3q9wn"
+git status
+```
+
+Output পাঠাও।
+
+
+
+Perfect ✅ এখন exactly দরকারি changes-গুলোই আছে।
+
+### Step 30 — সব changes stage করো
+
+চালাও:
+
+```bash id="u2h8jk"
+git add emp-management/.gitignore \
+emp-management/pnpm-lock.yaml \
+emp-management/src/components/DepartmentChart.vue \
+emp-management/src/components/EmployeeChart.vue \
+emp-management/src/stores/employee.ts \
+emp-management/src/views/Employee/Create.vue \
+emp-management/.env
+```
+
+তারপর:
+
+```bash id="s9x3mv"
+git status
+```
+
+এবার সবগুলো **Changes to be committed** এর মধ্যে থাকা উচিত।
+
+Output পাঠাও।
+
+
+Perfect ✅ সবগুলো staged হয়েছে।
+
+### Step 31 — Commit করো
+
+চালাও:
+
+```bash id="l5z8qc"
+git commit -m "Prepare frontend for production deployment"
+```
+
+Expected শেষে এরকম কিছু:
+
+```text
+[deployment-setup xxxxxxx] Prepare frontend for production deployment
+ 7 files changed, ...
+```
+
+Commit শেষ হলে **outputটা পাঠাও**।
+
+
+Perfect ✅ Commit successfully হয়েছে।
+
+Commit:
+
+```text
+5fac408
+Prepare frontend for production deployment
+```
+
+আর `.env` Git tracking থেকে remove হয়েছে—কিন্তু EC2-এর `.env` file থাকবে। 👍
+
+### Step 32 — Branch GitHub-এ push করি
+
+চালাও:
+
+```bash id="k5x2vd"
+git push -u origin deployment-setup
+```
+
+এতে নতুন `deployment-setup` branch GitHub-এ তৈরি হবে।
+
+Outputটা পাঠাও।
+
