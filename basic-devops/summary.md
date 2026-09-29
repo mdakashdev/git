@@ -7,6 +7,10 @@
 - docker project
 
 
+---
+# Revision 
+- EC2 instance create
+
 # Done
 
 1. AWS EC2 Server তৈরি
