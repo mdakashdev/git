@@ -1,5 +1,12 @@
 # My practical experience 
 
+First product niye think korechi 
+
+then design 
+
+
+
+-----
 ami akta SRS dekhe akta portion pojjonto AI ke diye banaichi ja amar starting ta fullfill kore. 
 
 then ami SRS er baki kaj gulo korte cai, kaj ta onek boro at a time bose AI ke diye korano kothin. 
