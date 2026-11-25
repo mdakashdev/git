@@ -1,6 +1,12 @@
 # Summary 
 1. Project Requirement to make SRS 
 2. ERD
+3. Scaffolding - only scaffolding without docker or any implementation. just run backend and frontend that stack. if need then i will correct that later
+4. Basic template / Layout skeleton
+5. d
+6. d
+7. d
+8. Docker (implement later)
 
 
 # Scope 
@@ -19,8 +25,6 @@ ami ekhon .md file and html paitechi using claude.
 
 # Basic
 - IEEE-style structure
-
-
 
 
 # Details 
@@ -78,5 +82,37 @@ make srs like @Example-SRS.pdf
 
 > then amake akta html file dibe, seita browser a open kore, print mode a open kore pdf korte hobe.
 
+## make ERD using calude prompt 
 
-## make ERD using 
+prompt : make ERD
+
+then ami akta .md file pabo, seita editor a open korle - view mode a full image ta dekha jabe.
+
+## Scaffolding 
+
+i want to project scaffolding using tech (Backend: NestJS+prisma, Frontend:Nuxt+TS, DB:PSQL, UI: Tailwind)
+
+only scaffolding without docker or any implementation. 
+
+just run backend and frontend that stack. if need then i will correct that later
+
+this scaffolding need for this srs - @doc/HRMS-SRS.pdf
+
+> akta project folder create korechi - then sekhane claude diye prompt dilam. 
+
+
+> then ami simple 2 ta folder peyechi , and got readme file 
+
+```
+Backend (http://localhost:4000/api/v1/health, Swagger at /api/docs):
+cd backend && cp .env.example .env && npm run start:dev
+
+Frontend (http://localhost:3000):
+cd frontend && cp .env.example .env && npm run dev
+```
+
+jekhane theke ami run kore 2 tai check korte pari, frondend and backend health endpoint 
+
+## Basic Template / Layout skeleton
+
+i want to layout skeleton with navigation, design should like this @follow-design.png
